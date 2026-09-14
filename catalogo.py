@@ -1,12 +1,17 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
+@dataclass(frozen = True)
 class UnidadMedida:
-    pass
+    nombre:str
+    simbolo :str
+    tipo :str
+    
 
 class Categoria:
-    def __init__(self, nombre: str, descripcion: str):
+    def __init__(self, nombre: str, descripcion: str = "Sin descripcion"):
         if not nombre or not nombre.strip():
-            raise ValueError("El nombre de la categoria no puede esta vacio")
+            raise ValueError("El nombre de la categoria no puede estar vacia")
         self._nombre = nombre
         self._descripcion = descripcion
 
@@ -18,21 +23,24 @@ class Categoria:
         return self._descripcion
 
 class ProductoCategoria():
-    def __init__(self, nombre: str, descripcion: str, categoria : Categoria ):
-        
+    def __init__(self, categoria : Categoria, es_principal : bool ):
         self._categoria = categoria
-        self._es_principal = False
+        self._es_principal = es_principal
+
+    @property
+    def categoria(self):
+        return self._categoria
 
     @property
     def es_principal(self):
         return self._es_principal
-    @property
+    
     def marcar_principal(self, valor: bool):
-        self.es_principal = valor
+        self._es_principal = valor
 
 
 class Producto(ABC):
-    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,  unidad_venta: UnidadMedida | None = None):
+    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float, habilitado : bool, unidad_venta: UnidadMedida | None = None):
         if not nombre or not nombre.strip():
             raise ValueError("El nombre del producto no puede estar vacío.")
         self._nombre = nombre
@@ -64,9 +72,7 @@ class Producto(ABC):
 
     @property
     def precio_publicado(self) -> str:
-        if self.unidad_venta is not None:
-            return f"$ {self.precio_base:.2f} / {self.unidad_venta.simbolo}"
-        return f"$ {self.precio_base:.2f}"
+        pass
 
     @abstractmethod
     def precio_final(self, cantidad: float) -> float:
@@ -79,7 +85,7 @@ class Producto(ABC):
         self._habilitado = False
 
     def clasificar_en(self, categoria: Categoria, es_principal: bool) -> None:
-        self._clasificaciones.append(ProductoCategoria())
+        self._clasificaciones.append(categoria, es_principal)
 
     def categorias(self) -> tuple[ProductoCategoria, ...]:
         return tuple(self._clasificaciones)
