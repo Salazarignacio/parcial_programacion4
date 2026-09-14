@@ -3,13 +3,33 @@ from abc import ABC, abstractmethod
 class UnidadMedida:
     pass
 
-class ProductoCategoria:
-    pass
-
-
 class Categoria:
-    def __init__(self, nombre: str):
-        self.nombre = nombre
+    def __init__(self, nombre: str, descripcion: str):
+        if not nombre or not nombre.strip():
+            raise ValueError("El nombre de la categoria no puede esta vacio")
+        self._nombre = nombre
+        self._descripcion = descripcion
+
+    @property
+    def nombre(self):
+        return self._nombre
+    @property
+    def descripcion(self):
+        return self._descripcion
+
+class ProductoCategoria():
+    def __init__(self, nombre: str, descripcion: str, categoria : Categoria ):
+        
+        self._categoria = categoria
+        self._es_principal = False
+
+    @property
+    def es_principal(self):
+        return self._es_principal
+    @property
+    def marcar_principal(self, valor: bool):
+        self.es_principal = valor
+
 
 class Producto(ABC):
     def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,  unidad_venta: UnidadMedida | None = None):
