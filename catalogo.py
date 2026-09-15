@@ -117,9 +117,17 @@ class ProductoPorPeso(Producto):
         raise NotImplementedError
 
 class ProductoCombo(Producto):
-    def __init__(self, nombre:str, habilitado: bool, descuento: float):
-            super().__init__(nombre, habilitado)
-            self._componentes : list[Producto] = []
+    def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):
+            precio_base = 0 
+            stock_cantidad = 0 
+            habilitado = True 
+            for componente in componentes:
+                precio_base += componente.precio_final(1)
+                stock_cantidad = componente._stock_cantidad
+                if(not componente.disponible):
+                    habilitado = False
+            super().__init__(nombre, precio_base, stock_cantidad,  habilitado, categoria)
+            self._componentes = componentes 
             self._descuento = descuento
     
     def precio_final(self, cantidad: float) -> float:
