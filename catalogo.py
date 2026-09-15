@@ -117,10 +117,10 @@ class ProductoPorPeso(Producto):
         raise NotImplementedError
 
 class ProductoCombo(Producto):
-    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
-                     habilitado: bool, categoria: Categoria,
-                     unidad_venta: UnidadMedida | None = None):
-            super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
+    def __init__(self, nombre:str, habilitado: bool, descuento: float):
+            super().__init__(nombre, habilitado)
+            self._componentes : list[Producto] = []
+            self._descuento = descuento
     
     def precio_final(self, cantidad: float) -> float:
             raise NotImplementedError
