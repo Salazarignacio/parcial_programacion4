@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Protocol
 
 @dataclass(frozen = True)
 class UnidadMedida:
@@ -40,7 +41,7 @@ class ProductoCategoria():
 
 
 class Producto(ABC):
-    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float, habilitado : bool, unidad_venta: UnidadMedida | None = None):
+    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float, habilitado : bool, categoria : Categoria, unidad_venta: UnidadMedida | None = None ):
         if not nombre or not nombre.strip():
             raise ValueError("El nombre del producto no puede estar vacío.")
         self._nombre = nombre
@@ -50,10 +51,10 @@ class Producto(ABC):
         if stock_cantidad < 0:
             raise ValueError("La cantidad de stock no puede ser negativa.")
         self._stock_cantidad = stock_cantidad
+        self._habilitado = habilitado
         self._unidad_venta = unidad_venta
-        self._habilitado = True
         self._clasificaciones : list[ProductoCategoria] = []
-
+        self.clasificar_en(categoria, True)
     @property
     def nombre(self):
         return self._nombre
@@ -85,7 +86,8 @@ class Producto(ABC):
         self._habilitado = False
 
     def clasificar_en(self, categoria: Categoria, es_principal: bool) -> None:
-        self._clasificaciones.append(categoria, es_principal)
+        categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
+        self._clasificaciones.append(categoriaCreada)
 
     def categorias(self) -> tuple[ProductoCategoria, ...]:
         return tuple(self._clasificaciones)
@@ -94,5 +96,35 @@ class Producto(ABC):
         return None
 
     def exportar(self) -> str:
+        return None
+
+class ProductoSimple(Producto):
+    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
+                 habilitado: bool, categoria: Categoria,
+                 unidad_venta: UnidadMedida | None = None):
+        super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
+
+    def precio_final(self, cantidad: float) -> float:
         raise NotImplementedError
 
+class ProductoPorPeso(Producto):
+    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
+                 habilitado: bool, categoria: Categoria,
+                 unidad_venta: UnidadMedida | None = None):
+        super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
+
+    def precio_final(self, cantidad: float) -> float:
+        raise NotImplementedError
+
+class ProductoCombo(Producto):
+    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
+                     habilitado: bool, categoria: Categoria,
+                     unidad_venta: UnidadMedida | None = None):
+            super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
+    
+    def precio_final(self, cantidad: float) -> float:
+            raise NotImplementedError
+
+class Exportable(Protocol):
+    def exportar(self) -> str:
+        ...
