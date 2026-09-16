@@ -10,7 +10,7 @@ class UnidadMedida:
     
 
 class Categoria:
-    def __init__(self, nombre: str, descripcion: str = "Categoria sin descripcion"):
+    def __init__(self, nombre: str, descripcion: str = ""):
         if not nombre or not nombre.strip():
             raise ValueError("El nombre de la categoria no puede estar vacia")
         self._nombre = nombre
@@ -73,7 +73,10 @@ class Producto(ABC):
 
     @property
     def precio_publicado(self) -> str:
-        pass
+        if (self.unidad_venta):
+            return f"$ {self.precio_base:.2f} / {self.unidad_venta.simbolo}"
+        else:
+            return f"$ {self.precio_base:.2f}"
 
     @abstractmethod
     def precio_final(self, cantidad: float) -> float:
@@ -85,16 +88,17 @@ class Producto(ABC):
     def deshabilitar(self) -> None:
         self._habilitado = False
 
-    def clasificar_en(self, categoria: Categoria, es_principal: bool = False) -> None:
+    def clasificar_en(self, categoria: Categoria, es_principal: bool = False) -> None:            
         for clasificacion in self._clasificaciones:
             if (categoria.nombre == clasificacion.categoria.nombre):
-                    if(es_principal and not clasificacion.es_principal):
-                        clasificacion.categoria.es_principal = True
-                    else:
-                        raise ValueError("La categoria ya esta clasificada")
-            else:
-                categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
-                self._clasificaciones.append(categoriaCreada)
+                raise ValueError("La categoria ya esta clasificada")
+
+        if(es_principal):
+            for clasificacion in self._clasificaciones:
+                if(clasificacion.es_principal):
+                    clasificacion.marcar_principal(False)
+        categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
+        self._clasificaciones.append(categoriaCreada)
 
 
     def categorias(self) -> tuple[ProductoCategoria, ...]:
@@ -142,5 +146,9 @@ categoria1 = Categoria("Lacteos", "productos hechos con lache")
 categoria2 = Categoria("BBlanco", "productos hechos con lache")
 producto1 = ProductoSimple("lechita", 1200, 30, True, categoria1)
 producto2 = ProductoSimple("queso", 100, 30, True, categoria1)
+producto3 = ProductoPorPeso("pan", 100, 30, True, categoria1, UnidadMedida("kg", "kg1", "kgta"))
 combo = ProductoCombo("Combo loco", [producto1, producto2], categoria1, 10)
 producto1.clasificar_en(categoria2, True)
+
+print(producto3.precio_publicado)
+print(producto2.precio_publicado)
