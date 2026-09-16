@@ -10,7 +10,7 @@ class UnidadMedida:
     
 
 class Categoria:
-    def __init__(self, nombre: str, descripcion: str = "Sin descripcion"):
+    def __init__(self, nombre: str, descripcion: str = "Categoria sin descripcion"):
         if not nombre or not nombre.strip():
             raise ValueError("El nombre de la categoria no puede estar vacia")
         self._nombre = nombre
@@ -86,8 +86,16 @@ class Producto(ABC):
         self._habilitado = False
 
     def clasificar_en(self, categoria: Categoria, es_principal: bool = False) -> None:
-        categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
-        self._clasificaciones.append(categoriaCreada)
+        for clasificacion in self._clasificaciones:
+            if (categoria.nombre == clasificacion.categoria.nombre):
+                    if(es_principal and not clasificacion.es_principal):
+                        clasificacion.categoria.es_principal = True
+                    else:
+                        raise ValueError("La categoria ya esta clasificada")
+            else:
+                categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
+                self._clasificaciones.append(categoriaCreada)
+
 
     def categorias(self) -> tuple[ProductoCategoria, ...]:
         return tuple(self._clasificaciones)
@@ -135,9 +143,4 @@ categoria2 = Categoria("BBlanco", "productos hechos con lache")
 producto1 = ProductoSimple("lechita", 1200, 30, True, categoria1)
 producto2 = ProductoSimple("queso", 100, 30, True, categoria1)
 combo = ProductoCombo("Combo loco", [producto1, producto2], categoria1, 10)
-print(producto1.nombre)
-print(combo.precio_base)
-for p_categoria in producto1.categorias():
-    print(p_categoria.categoria.nombre)
-print(producto1.categoria_principal().nombre)
 producto1.clasificar_en(categoria2, True)
