@@ -56,19 +56,19 @@ class Producto(ABC):
         self._clasificaciones : list[ProductoCategoria] = []
         self.clasificar_en(categoria, True)
     @property
-    def nombre(self):
+    def nombre(self)-> str:
         return self._nombre
 
     @property
-    def precio_base(self):
+    def precio_base(self) -> float:
         return self._precio_base
 
     @property
-    def unidad_venta(self):
+    def unidad_venta(self)-> UnidadMedida:
         return self._unidad_venta
 
     @property
-    def disponible(self):
+    def disponible(self)-> bool:
         return self._habilitado and self._stock_cantidad > 0
 
     @property
@@ -85,7 +85,7 @@ class Producto(ABC):
     def deshabilitar(self) -> None:
         self._habilitado = False
 
-    def clasificar_en(self, categoria: Categoria, es_principal: bool) -> None:
+    def clasificar_en(self, categoria: Categoria, es_principal: bool = False) -> None:
         categoriaCreada : ProductoCategoria = ProductoCategoria(categoria, es_principal)
         self._clasificaciones.append(categoriaCreada)
 
@@ -93,28 +93,20 @@ class Producto(ABC):
         return tuple(self._clasificaciones)
 
     def categoria_principal(self) -> Categoria:
-        return None
+        for productoCategoria in self._clasificaciones:
+            if(productoCategoria.es_principal):
+                return productoCategoria.categoria
 
     def exportar(self) -> str:
         return None
 
 class ProductoSimple(Producto):
-    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
-                 habilitado: bool, categoria: Categoria,
-                 unidad_venta: UnidadMedida | None = None):
-        super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
-
     def precio_final(self, cantidad: float) -> float:
-        raise NotImplementedError
+        return cantidad * self.precio_base
 
 class ProductoPorPeso(Producto):
-    def __init__(self, nombre: str, precio_base: float, stock_cantidad: float,
-                 habilitado: bool, categoria: Categoria,
-                 unidad_venta: UnidadMedida | None = None):
-        super().__init__(nombre, precio_base, stock_cantidad, habilitado, categoria, unidad_venta)
-
     def precio_final(self, cantidad: float) -> float:
-        raise NotImplementedError
+        return cantidad * self.precio_base
 
 class ProductoCombo(Producto):
     def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):
@@ -131,8 +123,21 @@ class ProductoCombo(Producto):
             self._descuento = descuento
     
     def precio_final(self, cantidad: float) -> float:
-            raise NotImplementedError
+            return self.precio_base * cantidad
 
 class Exportable(Protocol):
     def exportar(self) -> str:
         ...
+
+
+categoria1 = Categoria("Lacteos", "productos hechos con lache")
+categoria2 = Categoria("BBlanco", "productos hechos con lache")
+producto1 = ProductoSimple("lechita", 1200, 30, True, categoria1)
+producto2 = ProductoSimple("queso", 100, 30, True, categoria1)
+combo = ProductoCombo("Combo loco", [producto1, producto2], categoria1, 10)
+print(producto1.nombre)
+print(combo.precio_base)
+for p_categoria in producto1.categorias():
+    print(p_categoria.categoria.nombre)
+print(producto1.categoria_principal().nombre)
+producto1.clasificar_en(categoria2, True)
