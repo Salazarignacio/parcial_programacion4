@@ -118,7 +118,7 @@ class ProductoSimple(Producto):
 
 class ProductoPorPeso(Producto):
     def precio_final(self, cantidad: float) -> float:
-        return cantidad * self.precio_base
+        return round(cantidad * self.precio_base, 2)
 
 class ProductoCombo(Producto):
     def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):
@@ -131,11 +131,18 @@ class ProductoCombo(Producto):
                 if(not componente.disponible):
                     habilitado = False
             super().__init__(nombre, precio_base, stock_cantidad,  habilitado, categoria)
-            self._componentes = componentes 
+            if(len(componentes) < 2):
+                raise ValueError("El combo debe tener al menos 2 productos")
+            self._componentes = list(componentes)
             self._descuento = descuento
     
+    @property
+    def componentes(self) ->tuple[Producto]:
+        return tuple(self._componentes)
+
     def precio_final(self, cantidad: float) -> float:
             return self.precio_base * cantidad
+    
 
 class Exportable(Protocol):
     def exportar(self) -> str:
@@ -148,6 +155,9 @@ producto1 = ProductoSimple("lechita", 1200, 30, True, categoria1)
 producto2 = ProductoSimple("queso", 100, 30, True, categoria1)
 producto3 = ProductoPorPeso("pan", 100, 30, True, categoria1, UnidadMedida("kg", "kg1", "kgta"))
 combo = ProductoCombo("Combo loco", [producto1, producto2], categoria1, 10)
+
+for c in combo.componentes:
+    print(c)
 producto1.clasificar_en(categoria2, True)
 
 print(producto3.precio_publicado)
