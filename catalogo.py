@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Protocol
+import libreria_externa
 
 @dataclass(frozen = True)
 class UnidadMedida:
@@ -110,23 +111,26 @@ class Producto(ABC):
                 return productoCategoria.categoria
 
     def exportar(self) -> str:
-        return None
+        return f"{self.nombre} + {self.precio_publicado}"
 
 class ProductoSimple(Producto):
     def precio_final(self, cantidad: float) -> float:
-        if (not (cantidad).is_integer() and cantidad <= 1):
-            raise ValueError("La cantidad debe ser un numero entero negativo")
+        cantidad = float(cantidad)
+        if (not (cantidad).is_integer() or cantidad < 1):
+            raise ValueError("La cantidad debe ser un numero entero mayor que 0")
         return cantidad * self.precio_base
 
 class ProductoPorPeso(Producto):
     def precio_final(self, cantidad: float) -> float:
-        if (cantidad <0):
+        if (cantidad <= 0):
             raise ValueError("La cantidad debe ser un numero mayor a 0")
         
         return round(cantidad * self.precio_base, 2)
 
 class ProductoCombo(Producto):
     def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):        
+            if(len(componentes) < 2):
+                raise ValueError("El combo debe tener al menos 2 productos")
             precio_base = 0 
             stock_cantidad = componentes[0]._stock_cantidad 
             habilitado = True 
@@ -138,8 +142,6 @@ class ProductoCombo(Producto):
                     habilitado = False
 
             super().__init__(nombre, precio_base, stock_cantidad,  habilitado, categoria)
-            if(len(componentes) < 2):
-                raise ValueError("El combo debe tener al menos 2 productos")
             self._componentes = list(componentes)
             if(descuento < 0 or descuento >= 1):
                 raise ValueError("El descuento debe ser un numero decimal entre 0 y 1")
@@ -150,12 +152,11 @@ class ProductoCombo(Producto):
         return tuple(self._componentes)
 
     def precio_final(self, cantidad: float) -> float:
-        if (not (cantidad).is_integer() and cantidad <= 1):
-            raise ValueError("La cantidad debe ser un numero entero negativo")
-        acumulador = 0.0
-        for componente in self.componentes:
-            acumulador += componente.precio_final(1) * (1 - self._descuento) * cantidad 
-        return acumulador
+        cantidad = float(cantidad)
+        if (not (cantidad).is_integer() or cantidad < 1):
+            raise ValueError("La cantidad debe ser un numero entero mayor que 0")
+        
+        return self.precio_base  * (1 - self._descuento) * cantidad 
     
 class ProductoDestacado():
     def __init__(self, destacado : Producto, orden : int):
@@ -185,5 +186,13 @@ producto3 = ProductoPorPeso("pan", 100, 10, True, categoria1, UnidadMedida("kg",
 combo = ProductoCombo("Combo loco", [producto1, producto2, producto3], categoria1, 0.1)
 
 
-combo.precio_final(1)
-print(combo._stock_cantidad)
+combo.precio_final(1.0)
+fichas = libreria_externa.FichaPuntoDeVenta("111", "detalle pasado")
+
+def exportar_catalogo(items: list[Exportable]) -> list[str]:
+    exportacion = list()
+    for item in items:
+        exportacion.append(item.exportar())
+    return exportacion
+
+print(exportar_catalogo([producto1, combo, fichas])) 
