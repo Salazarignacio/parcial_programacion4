@@ -173,21 +173,7 @@ class ProductoDestacado():
 class Exportable(Protocol):
     def exportar(self) -> str:
         ...
-        #exportar_catalogo(items: list[Exportable]) -> list[str]
         
-
-
-
-categoria1 = Categoria("Lacteos", "productos hechos con lache")
-categoria2 = Categoria("BBlanco", "productos hechos con lache")
-producto1 = ProductoSimple("lechita", 1200, 3, True, categoria1)
-producto2 = ProductoSimple("queso", 100, 8, True, categoria1)
-producto3 = ProductoPorPeso("pan", 100, 10, True, categoria1, UnidadMedida("kg", "kg1", "kgta"))
-combo = ProductoCombo("Combo loco", [producto1, producto2, producto3], categoria1, 0.1)
-
-
-combo.precio_final(1.0)
-fichas = libreria_externa.FichaPuntoDeVenta("111", "detalle pasado")
 
 def exportar_catalogo(items: list[Exportable]) -> list[str]:
     exportacion = list()
@@ -195,4 +181,3 @@ def exportar_catalogo(items: list[Exportable]) -> list[str]:
         exportacion.append(item.exportar())
     return exportacion
 
-print(exportar_catalogo([producto1, combo, fichas])) 
