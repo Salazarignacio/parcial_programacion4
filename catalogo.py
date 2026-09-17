@@ -114,26 +114,35 @@ class Producto(ABC):
 
 class ProductoSimple(Producto):
     def precio_final(self, cantidad: float) -> float:
+        if (not (cantidad).is_integer() and cantidad <= 1):
+            raise ValueError("La cantidad debe ser un numero entero negativo")
         return cantidad * self.precio_base
 
 class ProductoPorPeso(Producto):
     def precio_final(self, cantidad: float) -> float:
+        if (cantidad <0):
+            raise ValueError("La cantidad debe ser un numero mayor a 0")
+        
         return round(cantidad * self.precio_base, 2)
 
 class ProductoCombo(Producto):
-    def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):
+    def __init__(self, nombre: str,componentes: list[Producto] , categoria : Categoria, descuento: float ):        
             precio_base = 0 
-            stock_cantidad = 0 
+            stock_cantidad = componentes[0]._stock_cantidad 
             habilitado = True 
+        
             for componente in componentes:
                 precio_base += componente.precio_final(1)
-                stock_cantidad = componente._stock_cantidad
+                stock_cantidad = componente._stock_cantidad if componente._stock_cantidad < stock_cantidad else stock_cantidad
                 if(not componente.disponible):
                     habilitado = False
+
             super().__init__(nombre, precio_base, stock_cantidad,  habilitado, categoria)
             if(len(componentes) < 2):
                 raise ValueError("El combo debe tener al menos 2 productos")
             self._componentes = list(componentes)
+            if(descuento < 0 or descuento >= 1):
+                raise ValueError("El descuento debe ser un numero decimal entre 0 y 1")
             self._descuento = descuento
     
     @property
@@ -141,24 +150,40 @@ class ProductoCombo(Producto):
         return tuple(self._componentes)
 
     def precio_final(self, cantidad: float) -> float:
-            return self.precio_base * cantidad
+        if (not (cantidad).is_integer() and cantidad <= 1):
+            raise ValueError("La cantidad debe ser un numero entero negativo")
+        acumulador = 0.0
+        for componente in self.componentes:
+            acumulador += componente.precio_final(1) * (1 - self._descuento) * cantidad 
+        return acumulador
     
+class ProductoDestacado():
+    def __init__(self, destacado : Producto, orden : int):
+        self._producto = destacado
+        self._orden_vidriera =  orden
+
+    @property
+    def producto(self):
+        return self._producto
+    @property
+    def orden_vidriera(self):
+        return self._orden_vidriera
 
 class Exportable(Protocol):
     def exportar(self) -> str:
         ...
+        #exportar_catalogo(items: list[Exportable]) -> list[str]
+        
+
 
 
 categoria1 = Categoria("Lacteos", "productos hechos con lache")
 categoria2 = Categoria("BBlanco", "productos hechos con lache")
-producto1 = ProductoSimple("lechita", 1200, 30, True, categoria1)
-producto2 = ProductoSimple("queso", 100, 30, True, categoria1)
-producto3 = ProductoPorPeso("pan", 100, 30, True, categoria1, UnidadMedida("kg", "kg1", "kgta"))
-combo = ProductoCombo("Combo loco", [producto1, producto2], categoria1, 10)
+producto1 = ProductoSimple("lechita", 1200, 3, True, categoria1)
+producto2 = ProductoSimple("queso", 100, 8, True, categoria1)
+producto3 = ProductoPorPeso("pan", 100, 10, True, categoria1, UnidadMedida("kg", "kg1", "kgta"))
+combo = ProductoCombo("Combo loco", [producto1, producto2, producto3], categoria1, 0.1)
 
-for c in combo.componentes:
-    print(c)
-producto1.clasificar_en(categoria2, True)
 
-print(producto3.precio_publicado)
-print(producto2.precio_publicado)
+combo.precio_final(1)
+print(combo._stock_cantidad)
